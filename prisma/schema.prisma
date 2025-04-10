@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  VILLAGE_REPRESENTATIVE
+  CELL_REPRESENTATIVE
+  SECTOR_REPRESENTATIVE
+  DISTRICT_REPRESENTATIVE
+  ADMIN
+  RNP
+  FIRE_DEPARTMENT
+  ENVIRONMENTAL_DEPARTMENT
+  RED_CROSS
+}
+
+enum CaseType {
+  LANDSLIDES
+  FLOODS
+  EARTHQUAKES
+  FIRE
+  RAIN_STORMS
+  ENVIRONMENTAL_HAZARD
+}
+
+enum CaseStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum Department {
+  RNP
+  FIRE_DEPARTMENT
+  ENVIRONMENTAL_DEPARTMENT
+  RED_CROSS
+}
+
+model User {
+  id            String         @id @default(uuid())
+  firstName     String
+  lastName      String
+  phoneNumber   String         @unique
+  email         String         @unique
+  password      String
+  role          Role
+  address       GeoLocation    @relation(fields: [geoLocationId], references: [id])
+  geoLocationId String
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("users")
+}
+
+model Reporter {
+  id            String      @id @default(uuid())
+  firstName     String
+  lastName      String
+  phoneNumber   String
+  nationalId    String      @unique
+  address       GeoLocation @relation(fields: [geoLocationId], references: [id])
+  geoLocationId String
+  cases         Case[]
+
+  @@map("reporters")
+}
+
+model Case {
+  id                String         @id @default(uuid())
+  caseType          CaseType
+  cause             String
+  startingTime      DateTime
+  actionTaken       String?
+  description       String
+  status            CaseStatus     @default(PENDING)
+  assignedDepartment Department?
+  reporter          Reporter       @relation(fields: [reporterId], references: [id])
+  reporterId        String
+  address           GeoLocation    @relation(fields: [geoLocationId], references: [id])
+  geoLocationId     String
+  notifications     Notification[]
+  images            CaseImage[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@map("cases")
+}
+
+model CaseImage {
+  id        String   @id @default(uuid())
+  url       String
+  case      Case     @relation(fields: [caseId], references: [id])
+  caseId    String
+  createdAt DateTime @default(now())
+
+  @@map("case_images")
+}
+
+model GeoLocation {
+  id                  String        @id @default(uuid())
+  name                String
+  locationType        String
+  parentGeoLocation   GeoLocation?  @relation("GeoLocationToParent", fields: [parentGeoLocationId], references: [id])
+  parentGeoLocationId String?
+  subGeoLocations     GeoLocation[] @relation("GeoLocationToParent")
+  users               User[]
+  reporters           Reporter[]
+  cases              Case[]
+
+  @@map("geo_locations")
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  metadata    Json?
+  isRead      Boolean  @default(false)
+  case        Case     @relation(fields: [caseId], references: [id])
+  caseId      String
+  recipient   User     @relation(fields: [recipientId], references: [id])
+  recipientId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("notifications")
+}

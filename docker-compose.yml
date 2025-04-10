@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/citizen_reporting
+      - JWT_SECRET=your-secret-key
+      - TWILIO_ACCOUNT_SID=your-account-sid
+      - TWILIO_AUTH_TOKEN=your-auth-token
+      - TWILIO_PHONE_NUMBER=your-twilio-number
+    depends_on:
+      - db
+    
+  db:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=citizen_reporting
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
