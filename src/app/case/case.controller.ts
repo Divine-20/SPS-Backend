@@ -144,7 +144,7 @@ export class CaseController {
     @Body() createCaseDto: CreateCaseDto,
     @UploadedFiles() images: Express.Multer.File[]
   ) {
-    const baseUrl = process.env.API_URL || "http://localhost:5000";
+    const baseUrl = process.env.API_URL || "http://localhost:8080";
     const processedImages = images?.map((img) => ({
       ...img,
       filename: `${baseUrl}/cases/images/${img.filename}`,

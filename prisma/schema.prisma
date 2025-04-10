@@ -8,98 +8,81 @@ datasource db {
 }
 
 enum Role {
-  VILLAGE_REPRESENTATIVE
-  CELL_REPRESENTATIVE
-  SECTOR_REPRESENTATIVE
-  DISTRICT_REPRESENTATIVE
   ADMIN
-  RNP
-  FIRE_DEPARTMENT
-  ENVIRONMENTAL_DEPARTMENT
-  RED_CROSS
+  OPERATOR
+  REPORTER
 }
 
-enum CaseType {
-  LANDSLIDES
-  FLOODS
-  EARTHQUAKES
-  FIRE
-  RAIN_STORMS
-  ENVIRONMENTAL_HAZARD
-}
-
-enum CaseStatus {
+enum IncidentStatus {
   PENDING
   IN_PROGRESS
   RESOLVED
 }
 
-enum Department {
-  RNP
-  FIRE_DEPARTMENT
-  ENVIRONMENTAL_DEPARTMENT
-  RED_CROSS
-}
-
 model User {
-  id            String         @id @default(uuid())
+  id            String       @id @default(uuid())
   firstName     String
   lastName      String
-  phoneNumber   String         @unique
-  email         String         @unique
-  password      String
+  phoneNumber   String       @unique
+  email         String       @unique
+  nationalId    String       @unique
   role          Role
-  address       GeoLocation    @relation(fields: [geoLocationId], references: [id])
-  geoLocationId String
-  notifications Notification[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  Incident      Incident[]
+  GeoLocation   GeoLocation? @relation(fields: [geoLocationId], references: [id])
+  geoLocationId String?
+  Call          Call[]
 
   @@map("users")
 }
 
-model Reporter {
-  id            String      @id @default(uuid())
-  firstName     String
-  lastName      String
-  phoneNumber   String
-  nationalId    String      @unique
-  address       GeoLocation @relation(fields: [geoLocationId], references: [id])
+model Operator {
+  id          String   @id @default(uuid())
+  firstName   String
+  lastName    String
+  phoneNumber String   @unique
+  email       String   @unique
+  rank        String
+  service     Service  @relation(fields: [serviceId], references: [id])
+  role        Role
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  serviceId   String
+  Call        Call[]
+
+  @@map("operators")
+}
+
+model Incident {
+  id            String          @id @default(uuid())
+  startingTime  DateTime
+  actionTaken   String?
+  description   String
+  status        IncidentStatus  @default(PENDING)
+  department    Department      @relation(fields: [departmentId], references: [id])
+  departmentId  String
+  user          User            @relation(fields: [userId], references: [id])
+  userId        String
+  address       GeoLocation     @relation(fields: [geoLocationId], references: [id])
   geoLocationId String
-  cases         Case[]
+  images        IncidentImage[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  service       Service?        @relation(fields: [serviceId], references: [id])
+  serviceId     String?
 
-  @@map("reporters")
+  @@map("incidents")
 }
 
-model Case {
-  id                String         @id @default(uuid())
-  caseType          CaseType
-  cause             String
-  startingTime      DateTime
-  actionTaken       String?
-  description       String
-  status            CaseStatus     @default(PENDING)
-  assignedDepartment Department?
-  reporter          Reporter       @relation(fields: [reporterId], references: [id])
-  reporterId        String
-  address           GeoLocation    @relation(fields: [geoLocationId], references: [id])
-  geoLocationId     String
-  notifications     Notification[]
-  images            CaseImage[]
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+model IncidentImage {
+  id         String   @id @default(uuid())
+  url        String
+  incident   Incident @relation(fields: [incidentId], references: [id])
+  incidentId String
+  createdAt  DateTime @default(now())
 
-  @@map("cases")
-}
-
-model CaseImage {
-  id        String   @id @default(uuid())
-  url       String
-  case      Case     @relation(fields: [caseId], references: [id])
-  caseId    String
-  createdAt DateTime @default(now())
-
-  @@map("case_images")
+  @@map("incident_images")
 }
 
 model GeoLocation {
@@ -110,24 +93,56 @@ model GeoLocation {
   parentGeoLocationId String?
   subGeoLocations     GeoLocation[] @relation("GeoLocationToParent")
   users               User[]
-  reporters           Reporter[]
-  cases              Case[]
+  incidents           Incident[]
 
   @@map("geo_locations")
 }
 
-model Notification {
-  id          String   @id @default(uuid())
-  title       String
-  content     String
-  metadata    Json?
-  isRead      Boolean  @default(false)
-  case        Case     @relation(fields: [caseId], references: [id])
-  caseId      String
-  recipient   User     @relation(fields: [recipientId], references: [id])
-  recipientId String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("notifications")
+  @@map("faqs")
+}
+
+model Service {
+  id              String     @id @default(uuid())
+  name            String
+  parentService   Service?   @relation("ServiceToParent", fields: [parentServiceId], references: [id])
+  parentServiceId String?
+  subServices     Service[]  @relation("ServiceToParent")
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  operators       Operator[]
+  incidents       Incident[]
+  calls           Call[]
+
+  @@map("services")
+}
+
+model Call {
+  id         String   @id @default(uuid())
+  operator   Operator @relation(fields: [operatorId], references: [id])
+  operatorId String
+  service    Service  @relation(fields: [serviceId], references: [id])
+  serviceId  String
+  User       User?    @relation(fields: [userId], references: [id])
+  userId     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("calls")
+}
+
+model Department {
+  id        String     @id @default(uuid())
+  name      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  incidents Incident[]
+
+  @@map("departments")
 }

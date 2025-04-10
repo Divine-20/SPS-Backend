@@ -19,7 +19,7 @@ async function bootstrap() {
 
   // Swagger configuration
   const config = new DocumentBuilder()
-    .setTitle("Citizen Emergency Reporting API")
+    .setTitle("Smart Reporting Services API")
     .setDescription("API for reporting and managing emergency cases")
     .setVersion("1.0")
     .addTag("auth", "Authentication endpoints")
@@ -32,6 +32,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api", app, document);
 
-  await app.listen(5000);
+  await app.listen(8080);
 }
 bootstrap();
