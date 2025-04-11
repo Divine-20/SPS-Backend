@@ -42,12 +42,15 @@ model User {
 }
 
 model Service {
-  id        String     @id @default(uuid())
-  name      String
-  operators Operator[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  incidents Incident[]
+  id              String     @id @default(uuid())
+  name            String
+  parentService   Service?   @relation("ServiceToParent", fields: [parentServiceId], references: [id])
+  parentServiceId String?
+  subServices     Service[]  @relation("ServiceToParent")
+  operators       Operator[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  incidents       Incident[]
 
   @@map("services")
 }

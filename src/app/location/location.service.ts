@@ -36,17 +36,6 @@ export class LocationService {
       where: {
         locationType: "PROVINCE",
       },
-      // include: {
-      //   subGeoLocations: {
-      //     include: {
-      //       subGeoLocations: {
-      //         include: {
-      //           subGeoLocations: true,
-      //         },
-      //       },
-      //     },
-      //   },
-      // },
       orderBy: {
         name: "asc",
       },
