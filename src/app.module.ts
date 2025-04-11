@@ -4,8 +4,8 @@ import { PrismaModule } from "./app/prisma/prisma.module";
 import { SharedModule } from "./app/shared/shared.module";
 import { UserModule } from "./app/user/user.module";
 import { AuthModule } from "./app/auth/auth.module";
-import { CaseModule } from "./app/case/case.module";
 import { LocationModule } from "./app/location/location.module";
+import { IncidentModule } from "./app/case/incident.module";
 
 @Module({
   imports: [
@@ -14,7 +14,7 @@ import { LocationModule } from "./app/location/location.module";
     SharedModule,
     UserModule,
     AuthModule,
-    CaseModule,
+    IncidentModule,
     LocationModule,
   ],
 })

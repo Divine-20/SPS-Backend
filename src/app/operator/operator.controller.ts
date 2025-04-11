@@ -23,7 +23,7 @@ import { OperatorService } from "./operator.service";
 import { CreateOperatorDto } from "./dto/create-operator.dto";
 
 @ApiTags("operators")
-@Controller("operators")
+@Controller("api/v1/operators")
 export class OperatorController {
   constructor(private readonly operatorService: OperatorService) {}
 

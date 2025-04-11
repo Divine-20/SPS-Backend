@@ -4,7 +4,7 @@ import { LocationService } from "./location.service";
 import { GeoLocation } from "./location.entity";
 
 @ApiTags("locations")
-@Controller("locations")
+@Controller("api/v1/locations")
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
 

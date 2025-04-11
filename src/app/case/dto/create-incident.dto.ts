@@ -1,23 +1,20 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { Role } from "@prisma/client";
 import {
-  IsEnum,
   IsNotEmpty,
   IsString,
   IsDateString,
   IsArray,
   IsOptional,
+  IsEmail,
+  ValidateIf,
 } from "class-validator";
-import { CaseType } from "@prisma/client";
 
-export class CreateCaseDto {
-  @ApiProperty({ enum: CaseType })
-  @IsEnum(CaseType)
-  caseType: CaseType;
-
+export class CreateIncidentDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  cause: string;
+  serviceId: string;
 
   @ApiProperty()
   @IsDateString()
@@ -31,28 +28,53 @@ export class CreateCaseDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  reporterGeoLocationId: string;
+  actionTaken: string;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
   emergencyGeoLocationId: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  nationalId: string;
+  nationalId?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  passportNumber?: string;
 
   @ApiProperty()
+  @ValidateIf((o) => !o.nationalId && !o.passportNumber && !o.email)
+  @IsNotEmpty()
   @IsString()
   firstName: string;
 
   @ApiProperty()
+  @ValidateIf((o) => !o.nationalId && !o.passportNumber && !o.email)
+  @IsNotEmpty()
   @IsString()
   lastName: string;
 
   @ApiProperty()
+  @IsNotEmpty()
   @IsString()
   phoneNumber: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  departmentId?: string;
+
+  @ApiProperty({ enum: Role, enumName: "Role" })
+  @IsOptional()
+  role?: Role;
 
   @ApiProperty({
     type: "array",

@@ -23,7 +23,7 @@ async function bootstrap() {
     .setDescription("API for accessing smart reporting services")
     .setVersion("1.0")
     .addTag("auth", "Authentication endpoints")
-    .addTag("cases", "Emergency case management")
+    .addTag("incidents", "Incidents management")
     .addTag("users", "User management")
     .addTag("locations", "Location management")
     .addBearerAuth()
