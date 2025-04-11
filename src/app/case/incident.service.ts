@@ -28,6 +28,12 @@ export class IncidentService {
     return randomBytes(16).toString("hex");
   }
 
+  private generateTrackingCode(): string {
+    const prefix = "INC";
+    const randomPart = randomBytes(3).toString("hex").toUpperCase();
+    return `${prefix}-${randomPart}`;
+  }
+
   async create(createIncidentDto: CreateIncidentDto, images?: MulterFile[]) {
     const {
       nationalId,
@@ -77,13 +83,15 @@ export class IncidentService {
       console.log(`Generated password for new user: ${password}`);
     }
 
-    // Create incident
+    // Create incident with tracking code
+    const trackingCode = this.generateTrackingCode();
     const newIncident = await this.prisma.incident.create({
       data: {
+        trackingCode,
         startingTime,
         description,
         actionTaken,
-        status: "PENDING",
+        status: IncidentStatus.PENDING,
         ...(departmentId && {
           department: {
             connect: { id: departmentId },
@@ -116,6 +124,12 @@ export class IncidentService {
         address: true,
         service: true,
         images: true,
+        departmentAssignments: {
+          include: {
+            assignedBy: true,
+            department: true,
+          },
+        },
       },
     });
 
@@ -129,9 +143,6 @@ export class IncidentService {
   ) {
     const incident = await this.prisma.incident.findUnique({
       where: { id: incidentId },
-      include: {
-        department: true,
-      },
     });
 
     if (!incident) {
@@ -157,16 +168,15 @@ export class IncidentService {
           department: {
             connect: { id: departmentId },
           },
-          status: IncidentStatus.IN_PROGRESS,
+          status: IncidentStatus.ASSIGNED,
           departmentAssignments: {
             create: {
-              assignedBy: {
-                connect: { id: assignedById },
-              },
               department: {
                 connect: { id: departmentId },
               },
-              assignedAt: new Date(),
+              assignedBy: {
+                connect: { id: assignedById },
+              },
             },
           },
         },

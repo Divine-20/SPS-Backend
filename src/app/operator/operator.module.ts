@@ -11,4 +11,4 @@ import { OperatorService } from "./operator.service";
   providers: [OperatorService, PrismaService],
   exports: [OperatorService],
 })
-export class UserModule {}
+export class OperatorModule {}

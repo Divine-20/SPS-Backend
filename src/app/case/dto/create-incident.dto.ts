@@ -25,10 +25,9 @@ export class CreateIncidentDto {
   @IsString()
   description: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiProperty({ required: false })
   @IsString()
-  actionTaken: string;
+  actionTaken?: string;
 
   @ApiProperty()
   @IsNotEmpty()
@@ -64,7 +63,7 @@ export class CreateIncidentDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsEmail()
+  // @IsEmail()
   email?: string;
 
   @ApiProperty({ required: false })

@@ -6,11 +6,16 @@ import {
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import * as bcrypt from "bcrypt";
+import { Role } from "@prisma/client";
+import { randomBytes } from "crypto";
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
+  private generateTicketNumber(): string {
+    return randomBytes(3).toString("hex").toUpperCase();
+  }
   async create(createUserDto: CreateUserDto) {
     const {
       email,
@@ -22,7 +27,6 @@ export class UserService {
       ...rest
     } = createUserDto;
 
-    // Check if user exists
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [{ email }, { phoneNumber }, { nationalId }, { passportNumber }],
@@ -37,9 +41,8 @@ export class UserService {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const userRole = createUserDto.role;
-    if (!userRole) {
-    }
+    const ticketNumber =
+      role === Role.REPORTER ? this.generateTicketNumber() : undefined;
 
     return this.prisma.user.create({
       data: {
@@ -49,7 +52,8 @@ export class UserService {
         password: hashedPassword,
         nationalId,
         passportNumber,
-        ...(role && { role }),
+        role: role || Role.REPORTER,
+        ticketNumber,
       },
     });
   }

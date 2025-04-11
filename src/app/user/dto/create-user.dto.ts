@@ -35,16 +35,6 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({ enum: Role })
-  @IsNotEmpty()
   @IsEnum(Role)
   role: Role;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  incidentId: string;
-
-  @ApiProperty()
-  @IsString()
-  callId: string;
 }

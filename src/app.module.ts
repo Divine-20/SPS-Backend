@@ -6,6 +6,7 @@ import { UserModule } from "./app/user/user.module";
 import { AuthModule } from "./app/auth/auth.module";
 import { LocationModule } from "./app/location/location.module";
 import { IncidentModule } from "./app/case/incident.module";
+import { OperatorModule } from "./app/operator/operator.module";
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { IncidentModule } from "./app/case/incident.module";
     AuthModule,
     IncidentModule,
     LocationModule,
+    OperatorModule,
   ],
 })
 export class AppModule {}

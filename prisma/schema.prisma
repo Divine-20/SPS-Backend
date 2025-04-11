@@ -31,6 +31,7 @@ model User {
   passportNumber        String?                @unique
   password              String
   role                  Role                   @default(REPORTER)
+  ticketNumber          String?                @unique @map("ticket_number")
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   operator              Operator?
@@ -42,15 +43,12 @@ model User {
 }
 
 model Service {
-  id              String     @id @default(uuid())
-  name            String
-  parentService   Service?   @relation("ServiceToParent", fields: [parentServiceId], references: [id])
-  parentServiceId String?
-  subServices     Service[]  @relation("ServiceToParent")
-  operators       Operator[]
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  incidents       Incident[]
+  id        String     @id @default(uuid())
+  name      String
+  operators Operator[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  incidents Incident[]
 
   @@map("services")
 }
@@ -82,6 +80,7 @@ model Department {
 
 model Incident {
   id                    String                 @id @default(uuid())
+  trackingCode          String                 @unique @map("tracking_code")
   startingTime          DateTime
   actionTaken           String?
   description           String
