@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
-import { Role } from '@prisma/client';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsEmail, IsEnum, IsNotEmpty, IsString } from "class-validator";
+import { Role } from "@prisma/client";
 
 export class CreateUserDto {
   @ApiProperty()
@@ -19,12 +19,18 @@ export class CreateUserDto {
   phoneNumber: string;
 
   @ApiProperty()
-  @IsNotEmpty()
   @IsEmail()
   email: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsString()
+  nationalId: string;
+
+  @ApiProperty()
+  @IsString()
+  passportNumber: string;
+
+  @ApiProperty()
   @IsString()
   password: string;
 
@@ -36,5 +42,9 @@ export class CreateUserDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  geoLocationId: string;
+  incidentId: string;
+
+  @ApiProperty()
+  @IsString()
+  callId: string;
 }

@@ -20,36 +20,35 @@ enum IncidentStatus {
 }
 
 model User {
-  id            String       @id @default(uuid())
-  firstName     String
-  lastName      String
-  phoneNumber   String       @unique
-  email         String       @unique
-  nationalId    String       @unique
-  role          Role
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  Incident      Incident[]
-  GeoLocation   GeoLocation? @relation(fields: [geoLocationId], references: [id])
-  geoLocationId String?
-  Call          Call[]
+  id             String     @id @default(uuid())
+  firstName      String
+  lastName       String
+  phoneNumber    String     @unique
+  email          String     @unique
+  nationalId     String?    @unique
+  passportNumber String?    @unique
+  role           Role       @default(REPORTER)
+  password       String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  operator       Operator?
+  incidents      Incident[]
+  calls          Call[]
+  operatorId     String?
 
   @@map("users")
 }
 
 model Operator {
-  id          String   @id @default(uuid())
-  firstName   String
-  lastName    String
-  phoneNumber String   @unique
-  email       String   @unique
-  rank        String
-  service     Service  @relation(fields: [serviceId], references: [id])
-  role        Role
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  serviceId   String
-  Call        Call[]
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+  rank      String
+  service   Service  @relation(fields: [serviceId], references: [id])
+  serviceId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  call      Call[]
 
   @@map("operators")
 }
@@ -92,7 +91,6 @@ model GeoLocation {
   parentGeoLocation   GeoLocation?  @relation("GeoLocationToParent", fields: [parentGeoLocationId], references: [id])
   parentGeoLocationId String?
   subGeoLocations     GeoLocation[] @relation("GeoLocationToParent")
-  users               User[]
   incidents           Incident[]
 
   @@map("geo_locations")

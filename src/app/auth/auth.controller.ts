@@ -80,7 +80,6 @@ export class AuthController {
         email: user.email,
         phoneNumber: user.phoneNumber,
         role: user.role,
-        geoLocationId: user.geoLocationId,
       },
     };
   }

@@ -20,7 +20,7 @@ async function bootstrap() {
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle("Smart Reporting Services API")
-    .setDescription("API for reporting and managing emergency cases")
+    .setDescription("API for accessing smart reporting services")
     .setVersion("1.0")
     .addTag("auth", "Authentication endpoints")
     .addTag("cases", "Emergency case management")

@@ -40,16 +40,4 @@ export class UserController {
   async getProfile(@Request() req) {
     return this.userService.getProfile(req.user.id);
   }
-
-  @Get("map-data")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Get user jurisdiction map data" })
-  @ApiResponse({
-    status: 200,
-    description: "Returns map data for user jurisdiction",
-  })
-  async getMapData(@Request() req) {
-    return this.userService.getMapData(req.user.id);
-  }
 }
