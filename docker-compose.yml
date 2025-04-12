@@ -7,9 +7,6 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/citizen_reporting
       - JWT_SECRET=your-secret-key
-      - TWILIO_ACCOUNT_SID=your-account-sid
-      - TWILIO_AUTH_TOKEN=your-auth-token
-      - TWILIO_PHONE_NUMBER=your-twilio-number
     depends_on:
       - db
     
