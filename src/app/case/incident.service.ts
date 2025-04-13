@@ -168,7 +168,7 @@ export class IncidentService {
           department: {
             connect: { id: departmentId },
           },
-          status: IncidentStatus.ASSIGNED,
+          status: IncidentStatus.IN_PROGRESS,
           departmentAssignments: {
             create: {
               department: {

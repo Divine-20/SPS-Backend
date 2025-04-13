@@ -15,7 +15,6 @@ enum Role {
 
 enum IncidentStatus {
   PENDING
-  ASSIGNED
   IN_PROGRESS
   RESOLVED
   CLOSED
