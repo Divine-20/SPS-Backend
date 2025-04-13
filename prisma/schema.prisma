@@ -24,13 +24,13 @@ model User {
   id                    String                 @id @default(uuid())
   firstName             String
   lastName              String
-  phoneNumber           String                 @unique
-  email                 String                 @unique
-  nationalId            String?                @unique
-  passportNumber        String?                @unique
+  phoneNumber           String                 @unique(map: "users_phone_number_unique") @db.VarChar
+  email                 String                 @unique(map: "users_email_unique") @db.VarChar
+  nationalId            String?                @unique(map: "users_national_id_unique") @db.VarChar
+  passportNumber        String?                @unique(map: "users_passport_number_unique") @db.VarChar
   password              String
   role                  Role                   @default(REPORTER)
-  ticketNumber          String?                @unique @map("ticket_number")
+  ticketNumber          String?                @unique @map("ticket_number") @db.VarChar(6)
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   operator              Operator?
