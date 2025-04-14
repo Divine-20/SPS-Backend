@@ -5,6 +5,7 @@ import {
   Get,
   UseGuards,
   Request,
+  Param,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -39,5 +40,15 @@ export class UserController {
   })
   async getProfile(@Request() req) {
     return this.userService.getProfile(req.user.id);
+  }
+
+  @Get("user/:ticketNumber")
+  @ApiOperation({ summary: "Get user details" })
+  @ApiResponse({
+    status: 200,
+    description: "Returns user details",
+  })
+  async getUserByTicketNumber(@Param("ticketNumber") ticketNumber: string) {
+    return this.userService.findByTicketNumber(ticketNumber);
   }
 }

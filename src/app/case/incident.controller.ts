@@ -212,4 +212,56 @@ export class IncidentController {
     }
     return res.sendFile(imagePath);
   }
+
+  @Get("incidents/:trackingCode")
+  @ApiOperation({ summary: "Get incident by tracking code" })
+  @ApiParam({
+    name: "trackingCode",
+    description: "Incident tracking code",
+    type: "string",
+  })
+  async findByTrackingCode(@Param("trackingCode") trackingCode: string) {
+    const incident =
+      await this.incidentService.findByTrackingCode(trackingCode);
+    if (!incident) {
+      throw new NotFoundException(
+        `Incident with tracking code ${trackingCode} not found`
+      );
+    }
+    return incident;
+  }
+
+  @Get("incidents/:nationalId")
+  @ApiOperation({ summary: "Get incident by NationalId" })
+  @ApiParam({
+    name: "nationalId",
+    description: "National Identification",
+    type: "string",
+  })
+  async findByNationalId(@Param("nationalId") nationalId: string) {
+    const incident = await this.incidentService.findByNationalId(nationalId);
+    if (!incident) {
+      throw new NotFoundException(
+        `User with National Id ${nationalId} not found`
+      );
+    }
+    return incident;
+  }
+  @Get("incidents/:passportNumber")
+  @ApiOperation({ summary: "Get incident by Passport Number" })
+  @ApiParam({
+    name: "passport Number",
+    description: "Passport Number",
+    type: "string",
+  })
+  async findByPassportNumber(@Param("passportNumber") passportNumber: string) {
+    const incident =
+      await this.incidentService.findByPassportNumber(passportNumber);
+    if (!incident) {
+      throw new NotFoundException(
+        `User with Passport ${passportNumber} not found`
+      );
+    }
+    return incident;
+  }
 }

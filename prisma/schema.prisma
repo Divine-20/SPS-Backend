@@ -20,6 +20,11 @@ enum IncidentStatus {
   CLOSED
 }
 
+enum CitizenshipStatus {
+  RESIDENT
+  NON_RESIDENT
+}
+
 model User {
   id                    String                 @id @default(uuid())
   firstName             String
@@ -33,6 +38,7 @@ model User {
   ticketNumber          String?                @unique @map("ticket_number") @db.VarChar(6)
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
+  citizenship           CitizenshipStatus?     @default(RESIDENT)
   operator              Operator?
   incidents             Incident[]
   calls                 Call[]

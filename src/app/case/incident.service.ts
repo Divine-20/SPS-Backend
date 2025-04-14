@@ -318,7 +318,70 @@ export class IncidentService {
       },
     });
   }
+  async findByTrackingCode(trackingCode: string) {
+    return this.prisma.incident.findMany({
+      where: {
+        trackingCode,
+      },
+      include: {
+        department: true,
+        address: true,
+        service: true,
+        images: true,
+        departmentAssignments: {
+          include: {
+            assignedBy: true,
+            department: true,
+          },
+        },
+      },
+    });
+  }
 
+  async findByNationalId(nationalId: string) {
+    return this.prisma.incident.findMany({
+      where: {
+        user: {
+          nationalId,
+        },
+      },
+      include: {
+        user: true,
+        department: true,
+        address: true,
+        service: true,
+        images: true,
+        departmentAssignments: {
+          include: {
+            assignedBy: true,
+            department: true,
+          },
+        },
+      },
+    });
+  }
+  async findByPassportNumber(passportNumber: string) {
+    return this.prisma.incident.findMany({
+      where: {
+        user: {
+          passportNumber,
+        },
+      },
+      include: {
+        user: true,
+        department: true,
+        address: true,
+        service: true,
+        images: true,
+        departmentAssignments: {
+          include: {
+            assignedBy: true,
+            department: true,
+          },
+        },
+      },
+    });
+  }
   private async findUserByUniqueIdentifier(identifier: {
     nationalId?: string;
     phoneNumber?: string;

@@ -6,16 +6,13 @@ import {
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import * as bcrypt from "bcrypt";
-import { Role } from "@prisma/client";
+import { CitizenshipStatus, Role } from "@prisma/client";
 import { randomBytes } from "crypto";
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  private generateTicketNumber(): string {
-    return randomBytes(3).toString("hex").toUpperCase();
-  }
   async create(createUserDto: CreateUserDto) {
     const {
       email,
@@ -24,6 +21,8 @@ export class UserService {
       nationalId,
       passportNumber,
       role,
+      citizenship,
+      ticketNumber,
       ...rest
     } = createUserDto;
 
@@ -41,8 +40,6 @@ export class UserService {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const ticketNumber =
-      role === Role.REPORTER ? this.generateTicketNumber() : undefined;
 
     return this.prisma.user.create({
       data: {
@@ -53,6 +50,7 @@ export class UserService {
         nationalId,
         passportNumber,
         role: role || Role.REPORTER,
+        citizenship: citizenship || CitizenshipStatus.RESIDENT,
         ticketNumber,
       },
     });
@@ -95,5 +93,20 @@ export class UserService {
     return {
       ...userWithoutPassword,
     };
+  }
+  async findAll() {
+    return this.prisma.user.findMany();
+  }
+
+  async findByTicketNumber(ticketNumber: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { ticketNumber },
+    });
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    return user;
   }
 }
