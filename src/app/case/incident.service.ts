@@ -43,7 +43,6 @@ export class IncidentService {
       firstName,
       lastName,
       serviceId,
-      departmentId,
       emergencyGeoLocationId,
       startingTime,
       description,
@@ -92,11 +91,6 @@ export class IncidentService {
         description,
         actionTaken,
         status: IncidentStatus.PENDING,
-        ...(departmentId && {
-          department: {
-            connect: { id: departmentId },
-          },
-        }),
         user: {
           connect: { id: reporter.id },
         },

@@ -213,7 +213,7 @@ export class IncidentController {
     return res.sendFile(imagePath);
   }
 
-  @Get("incidents/:trackingCode")
+  @Get("incident/:trackingCode")
   @ApiOperation({ summary: "Get incident by tracking code" })
   @ApiParam({
     name: "trackingCode",
@@ -231,7 +231,7 @@ export class IncidentController {
     return incident;
   }
 
-  @Get("incidents/:nationalId")
+  @Get("incident/:nationalId")
   @ApiOperation({ summary: "Get incident by NationalId" })
   @ApiParam({
     name: "nationalId",
@@ -247,7 +247,7 @@ export class IncidentController {
     }
     return incident;
   }
-  @Get("incidents/:passportNumber")
+  @Get("incident/:passportNumber")
   @ApiOperation({ summary: "Get incident by Passport Number" })
   @ApiParam({
     name: "passport Number",

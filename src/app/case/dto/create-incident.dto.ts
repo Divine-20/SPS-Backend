@@ -63,17 +63,7 @@ export class CreateIncidentDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  // @IsEmail()
   email?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  departmentId?: string;
-
-  @ApiProperty({ enum: Role, enumName: "Role" })
-  @IsOptional()
-  role?: Role;
 
   @ApiProperty({
     type: "array",
