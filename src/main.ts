@@ -8,14 +8,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Enable CORS
-  app.enableCors({
-    origin: [
-      "http://172.29.205.158:8081",
-      "https://b2e4-41-216-97-16.ngrok-free.app",
-    ],
-    credentials: true,
-    METHODS, // If using cookies/auth headers
-  });
+  app.enableCors();
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -24,7 +17,6 @@ async function bootstrap() {
       whitelist: true,
     })
   );
-
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle("Smart Reporting Services API")

@@ -3,6 +3,7 @@ import { PrismaClient, Prisma, Role, IncidentStatus } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 import { randomBytes } from "crypto";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
+import { SmsService } from "../sms/sms.service";
 
 interface MulterFile {
   fieldname: string;
@@ -20,7 +21,7 @@ interface MulterFile {
 export class IncidentService {
   private prisma: PrismaClient;
 
-  constructor() {
+  constructor(private readonly smsService: SmsService) {
     this.prisma = new PrismaClient();
   }
 
@@ -126,6 +127,17 @@ export class IncidentService {
         },
       },
     });
+
+    // Send SMS notification
+    try {
+      const message = this.smsService.generateRegistrationMessage(
+        firstName || reporter.firstName,
+        trackingCode
+      );
+      await this.smsService.sendSingleSms(phoneNumber, message);
+    } catch (error) {
+      console.error("Failed to send SMS notification:", error);
+    }
 
     return newIncident;
   }
@@ -319,7 +331,23 @@ export class IncidentService {
       },
       include: {
         department: true,
-        address: true,
+        address: {
+          include: {
+            parentGeoLocation: {
+              include: {
+                parentGeoLocation: {
+                  include: {
+                    parentGeoLocation: {
+                      include: {
+                        parentGeoLocation: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
         service: true,
         images: true,
         departmentAssignments: {
