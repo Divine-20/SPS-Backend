@@ -51,4 +51,14 @@ export class UserController {
   async getUserByTicketNumber(@Param("ticketNumber") ticketNumber: string) {
     return this.userService.findByTicketNumber(ticketNumber);
   }
+
+  @Get("by-phone/:phoneNumber")
+  @ApiOperation({ summary: "Get user details" })
+  @ApiResponse({
+    status: 200,
+    description: "Returns user details",
+  })
+  async getUserByPhoneNumber(@Param("phoneNumber") phoneNumber: string) {
+    return this.userService.findByPhoneNumber(phoneNumber);
+  }
 }

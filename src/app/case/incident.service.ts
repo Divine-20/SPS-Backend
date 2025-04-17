@@ -1,9 +1,16 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { PrismaClient, Prisma, Role, IncidentStatus } from "@prisma/client";
+import {
+  PrismaClient,
+  Prisma,
+  Role,
+  IncidentStatus,
+  CitizenshipStatus,
+} from "@prisma/client";
 import * as bcrypt from "bcrypt";
 import { randomBytes } from "crypto";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { SmsService } from "../sms/sms.service";
+import { EmailService } from "../email/email.service";
 
 interface MulterFile {
   fieldname: string;
@@ -21,7 +28,10 @@ interface MulterFile {
 export class IncidentService {
   private prisma: PrismaClient;
 
-  constructor(private readonly smsService: SmsService) {
+  constructor(
+    private readonly smsService: SmsService,
+    private readonly emailService: EmailService
+  ) {
     this.prisma = new PrismaClient();
   }
 
@@ -33,6 +43,33 @@ export class IncidentService {
     const prefix = "INC";
     const randomPart = randomBytes(3).toString("hex").toUpperCase();
     return `${prefix}-${randomPart}`;
+  }
+
+  private async findExistingUser(identifiers: {
+    nationalId?: string;
+    phoneNumber?: string;
+    email?: string;
+    passportNumber?: string;
+  }) {
+    return this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { phoneNumber: identifiers.phoneNumber || "" },
+          { nationalId: identifiers.nationalId || null },
+          { passportNumber: identifiers.passportNumber || null },
+          { email: identifiers.email || null },
+        ].filter((condition) => {
+          // Only include passportNumber condition if it's not null or empty
+          if ("passportNumber" in condition) {
+            return (
+              condition.passportNumber !== null &&
+              condition.passportNumber !== ""
+            );
+          }
+          return true;
+        }),
+      },
+    });
   }
 
   async create(createIncidentDto: CreateIncidentDto, images?: MulterFile[]) {
@@ -51,14 +88,62 @@ export class IncidentService {
       ...rest
     } = createIncidentDto;
 
-    // Find or create reporter
-    let reporter = await this.findUserByUniqueIdentifier({
+    // Handle anonymous reports (no user creation)
+    if (!nationalId && !passportNumber && !email && !phoneNumber) {
+      const trackingCode = this.generateTrackingCode();
+      return this.prisma.incident.create({
+        data: {
+          trackingCode,
+          startingTime,
+          description,
+          actionTaken,
+          status: IncidentStatus.PENDING,
+          address: {
+            connect: { id: emergencyGeoLocationId },
+          },
+          service: serviceId
+            ? {
+                connect: { id: serviceId },
+              }
+            : undefined,
+          images: images
+            ? {
+                createMany: {
+                  data: images.map((img) => ({
+                    url: img.filename,
+                  })),
+                },
+              }
+            : undefined,
+          user: {
+            connect: { id: null }, // Connect to null user for anonymous reports
+          },
+        },
+        include: {
+          user: true,
+          department: true,
+          address: true,
+          service: true,
+          images: true,
+          departmentAssignments: {
+            include: {
+              assignedBy: true,
+              department: true,
+            },
+          },
+        },
+      });
+    }
+
+    // First try to find an existing user
+    let reporter = await this.findExistingUser({
       nationalId,
       phoneNumber,
       email,
       passportNumber,
     });
 
+    // If no existing user is found, create a new one
     if (!reporter) {
       // Generate a random password for new users
       const password = this.generateRandomPassword();
@@ -67,19 +152,21 @@ export class IncidentService {
       const userData: Prisma.UserCreateInput = {
         firstName: firstName || "",
         lastName: lastName || "",
-        phoneNumber,
-        email: email || "",
+        phoneNumber: phoneNumber || null,
+        email: email || null,
         nationalId: nationalId || null,
         passportNumber: passportNumber || null,
         role: Role.REPORTER,
         password: hashedPassword,
+        citizenship: nationalId
+          ? CitizenshipStatus.RESIDENT
+          : CitizenshipStatus.NON_RESIDENT,
       };
 
       reporter = await this.prisma.user.create({
         data: userData,
       });
 
-      // TODO: Send password to user via SMS or email
       console.log(`Generated password for new user: ${password}`);
     }
 
@@ -128,16 +215,39 @@ export class IncidentService {
       },
     });
 
+    // Send notifications (both SMS and Email if available)
+    const notificationPromises = [];
+
     // Send SMS notification
-    try {
-      const message = this.smsService.generateRegistrationMessage(
-        firstName || reporter.firstName,
-        trackingCode
-      );
-      await this.smsService.sendSingleSms(phoneNumber, message);
-    } catch (error) {
-      console.error("Failed to send SMS notification:", error);
+    if (phoneNumber) {
+      const smsPromise = this.smsService
+        .sendSingleSms(
+          phoneNumber,
+          this.smsService.generateRegistrationMessage(
+            firstName || reporter.firstName,
+            trackingCode
+          )
+        )
+        .catch((error) => {
+          console.error("Failed to send SMS notification:", error);
+        });
+      notificationPromises.push(smsPromise);
     }
+
+    // Send email notification
+    if (email) {
+      const emailPromise = this.emailService
+        .sendIncidentEmail(email, firstName || reporter.firstName, trackingCode)
+        .catch((error) => {
+          console.error("Failed to send email notification:", error);
+        });
+      notificationPromises.push(emailPromise);
+    }
+
+    // Wait for all notifications to be sent (or fail) without blocking the response
+    Promise.all(notificationPromises).catch((error) => {
+      console.error("Error in sending notifications:", error);
+    });
 
     return newIncident;
   }
@@ -401,23 +511,6 @@ export class IncidentService {
             department: true,
           },
         },
-      },
-    });
-  }
-  private async findUserByUniqueIdentifier(identifier: {
-    nationalId?: string;
-    phoneNumber?: string;
-    email?: string;
-    passportNumber?: string;
-  }) {
-    return this.prisma.user.findFirst({
-      where: {
-        OR: [
-          { nationalId: identifier.nationalId },
-          { phoneNumber: identifier.phoneNumber },
-          { email: identifier.email },
-          { passportNumber: identifier.passportNumber },
-        ].filter(Boolean),
       },
     });
   }

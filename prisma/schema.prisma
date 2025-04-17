@@ -7,6 +7,143 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id                    String                 @id @default(uuid())
+  firstName             String
+  lastName              String
+  phoneNumber           String                 @unique
+  email                 String                 @unique(map: "users_email_unique") @db.VarChar
+  nationalId            String?                @unique(map: "users_national_id_unique") @db.VarChar
+  passportNumber        String?                @unique(map: "users_passport_number_unique") @db.VarChar
+  password              String
+  role                  Role                   @default(REPORTER)
+  ticketNumber          String?                @unique @map("ticket_number") @db.VarChar(6)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime
+  citizenship           CitizenshipStatus?     @default(RESIDENT)
+  calls                 Call[]
+  departmentAssignments DepartmentAssignment[] @relation("AssignedBy")
+  incidents             Incident[]
+  operator              Operator?
+
+  @@map("users")
+}
+
+model Service {
+  id              String     @id @default(uuid())
+  name            String
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  parentServiceId String?
+  incidents       Incident[]
+  operators       Operator[]
+  parentService   Service?   @relation("ServiceToParent", fields: [parentServiceId], references: [id])
+  subService      Service[]  @relation("ServiceToParent")
+  calls           Call[]
+
+  @@map("services")
+}
+
+model Operator {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  rank      String
+  serviceId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  calls     Call[]
+  service   Service  @relation(fields: [serviceId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("operators")
+}
+
+model Department {
+  id                    String                 @id @default(uuid())
+  name                  String
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  departmentAssignments DepartmentAssignment[]
+  incidents             Incident[]
+
+  @@map("departments")
+}
+
+model Incident {
+  id                    String                 @id @default(uuid())
+  trackingCode          String                 @unique @map("tracking_code")
+  startingTime          DateTime
+  actionTaken           String?
+  description           String
+  status                IncidentStatus         @default(PENDING)
+  departmentId          String?
+  userId                String
+  geoLocationId         String
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  serviceId             String?
+  departmentAssignments DepartmentAssignment[]
+  images                IncidentImage[]
+  department            Department?            @relation(fields: [departmentId], references: [id])
+  address               GeoLocation            @relation(fields: [geoLocationId], references: [id])
+  service               Service?               @relation(fields: [serviceId], references: [id])
+  user                  User                   @relation(fields: [userId], references: [id])
+
+  @@map("incidents")
+}
+
+model DepartmentAssignment {
+  id           String     @id @default(uuid())
+  incidentId   String
+  departmentId String
+  assignedById String
+  assignedAt   DateTime   @default(now())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  assignedBy   User       @relation("AssignedBy", fields: [assignedById], references: [id])
+  department   Department @relation(fields: [departmentId], references: [id])
+  incident     Incident   @relation(fields: [incidentId], references: [id])
+
+  @@map("department_assignments")
+}
+
+model IncidentImage {
+  id         String   @id @default(uuid())
+  url        String
+  incidentId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  incident   Incident @relation(fields: [incidentId], references: [id])
+
+  @@map("incident_images")
+}
+
+model GeoLocation {
+  id                  String        @id @default(uuid())
+  name                String
+  locationType        String
+  parentGeoLocationId String?
+  parentGeoLocation   GeoLocation?  @relation("GeoLocationToParent", fields: [parentGeoLocationId], references: [id])
+  subGeoLocations     GeoLocation[] @relation("GeoLocationToParent")
+  incidents           Incident[]
+
+  @@map("geo_locations")
+}
+
+model Call {
+  id         String   @id @default(uuid())
+  operatorId String
+  reporterId String
+  serviceId  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  operator   Operator @relation(fields: [operatorId], references: [id])
+  reporter   User     @relation(fields: [reporterId], references: [id])
+  service    Service  @relation(fields: [serviceId], references: [id])
+
+  @@map("calls")
+}
+
 enum Role {
   ADMIN
   OPERATOR
@@ -23,140 +160,5 @@ enum IncidentStatus {
 enum CitizenshipStatus {
   RESIDENT
   NON_RESIDENT
-}
-
-model User {
-  id                    String                 @id @default(uuid())
-  firstName             String
-  lastName              String
-  phoneNumber           String                 @unique(map: "users_phone_number_unique") @db.VarChar
-  email                 String                 @unique(map: "users_email_unique") @db.VarChar
-  nationalId            String?                @unique(map: "users_national_id_unique") @db.VarChar
-  passportNumber        String?                @unique(map: "users_passport_number_unique") @db.VarChar
-  password              String
-  role                  Role                   @default(REPORTER)
-  ticketNumber          String?                @unique @map("ticket_number") @db.VarChar(6)
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  citizenship           CitizenshipStatus?     @default(RESIDENT)
-  operator              Operator?
-  incidents             Incident[]
-  calls                 Call[]
-  departmentAssignments DepartmentAssignment[] @relation("AssignedBy")
-
-  @@map("users")
-}
-
-model Service {
-  id              String     @id @default(uuid())
-  name            String
-  parentService   Service?   @relation("ServiceToParent", fields: [parentServiceId], references: [id])
-  parentServiceId String?
-  subService      Service[]  @relation("ServiceToParent")
-  operators       Operator[]
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  incidents       Incident[]
-
-  @@map("services")
-}
-
-model Operator {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String   @unique
-  rank      String
-  service   Service  @relation(fields: [serviceId], references: [id])
-  serviceId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  calls     Call[]
-
-  @@map("operators")
-}
-
-model Department {
-  id                    String                 @id @default(uuid())
-  name                  String
-  incidents             Incident[]
-  departmentAssignments DepartmentAssignment[]
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-
-  @@map("departments")
-}
-
-model Incident {
-  id                    String                 @id @default(uuid())
-  trackingCode          String                 @unique @map("tracking_code")
-  startingTime          DateTime
-  actionTaken           String?
-  description           String
-  status                IncidentStatus         @default(PENDING)
-  department            Department?            @relation(fields: [departmentId], references: [id])
-  departmentId          String?
-  user                  User                   @relation(fields: [userId], references: [id])
-  userId                String
-  address               GeoLocation            @relation(fields: [geoLocationId], references: [id])
-  geoLocationId         String
-  images                IncidentImage[]
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  service               Service?               @relation(fields: [serviceId], references: [id])
-  serviceId             String?
-  departmentAssignments DepartmentAssignment[]
-
-  @@map("incidents")
-}
-
-model DepartmentAssignment {
-  id           String     @id @default(uuid())
-  incident     Incident   @relation(fields: [incidentId], references: [id])
-  incidentId   String
-  department   Department @relation(fields: [departmentId], references: [id])
-  departmentId String
-  assignedBy   User       @relation("AssignedBy", fields: [assignedById], references: [id])
-  assignedById String
-  assignedAt   DateTime   @default(now())
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  @@map("department_assignments")
-}
-
-model IncidentImage {
-  id         String   @id @default(uuid())
-  url        String
-  incident   Incident @relation(fields: [incidentId], references: [id])
-  incidentId String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@map("incident_images")
-}
-
-model GeoLocation {
-  id                  String        @id @default(uuid())
-  name                String
-  locationType        String
-  parentGeoLocation   GeoLocation?  @relation("GeoLocationToParent", fields: [parentGeoLocationId], references: [id])
-  parentGeoLocationId String?
-  subGeoLocations     GeoLocation[] @relation("GeoLocationToParent")
-  incidents           Incident[]
-
-  @@map("geo_locations")
-}
-
-model Call {
-  id         String   @id @default(uuid())
-  operator   Operator @relation(fields: [operatorId], references: [id])
-  operatorId String
-  reporter   User     @relation(fields: [reporterId], references: [id])
-  reporterId String
-  status     String
-  notes      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@map("calls")
+  ANONYMOUS
 }

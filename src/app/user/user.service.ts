@@ -8,6 +8,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import * as bcrypt from "bcrypt";
 import { CitizenshipStatus, Role } from "@prisma/client";
 import { randomBytes } from "crypto";
+import { log } from "console";
 
 @Injectable()
 export class UserService {
@@ -26,16 +27,35 @@ export class UserService {
       ...rest
     } = createUserDto;
 
-    const existingUser = await this.prisma.user.findFirst({
-      where: {
-        OR: [{ email }, { phoneNumber }, { nationalId }, { passportNumber }],
-      },
-    });
-
-    if (existingUser) {
+    // Validate resident/non-resident requirements
+    if (citizenship === CitizenshipStatus.RESIDENT && !nationalId) {
+      throw new ConflictException("National ID is required for residents");
+    }
+    if (citizenship === CitizenshipStatus.NON_RESIDENT && !passportNumber) {
       throw new ConflictException(
-        "User with this email or phone number or national Id or passport number already exists"
+        "Passport number is required for non-residents"
       );
+    }
+
+    // Check for existing user only if we have identifiers
+    const searchConditions = [];
+    if (email) searchConditions.push({ email });
+    if (phoneNumber) searchConditions.push({ phoneNumber });
+    if (nationalId) searchConditions.push({ nationalId });
+    if (passportNumber) searchConditions.push({ passportNumber });
+
+    if (searchConditions.length > 0) {
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          OR: searchConditions,
+        },
+      });
+
+      if (existingUser) {
+        throw new ConflictException(
+          "User with this email, phone number, national ID, or passport number already exists"
+        );
+      }
     }
 
     // Hash password
@@ -44,11 +64,11 @@ export class UserService {
     return this.prisma.user.create({
       data: {
         ...rest,
-        email,
-        phoneNumber,
+        email: email || null,
+        phoneNumber: phoneNumber || null,
         password: hashedPassword,
-        nationalId,
-        passportNumber,
+        nationalId: nationalId || null,
+        passportNumber: passportNumber || null,
         role: role || Role.REPORTER,
         citizenship: citizenship || CitizenshipStatus.RESIDENT,
         ticketNumber,
@@ -107,6 +127,16 @@ export class UserService {
       throw new NotFoundException("User not found");
     }
 
+    return user;
+  }
+
+  async findByPhoneNumber(phoneNumber: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { phoneNumber },
+    });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
     return user;
   }
 }
