@@ -36,6 +36,8 @@ export class OperatorService {
           passportNumber,
           password: hashedPassword,
           role: Role.OPERATOR,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       });
 

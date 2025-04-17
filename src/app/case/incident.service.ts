@@ -161,6 +161,8 @@ export class IncidentService {
         citizenship: nationalId
           ? CitizenshipStatus.RESIDENT
           : CitizenshipStatus.NON_RESIDENT,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       reporter = await this.prisma.user.create({
