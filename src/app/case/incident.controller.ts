@@ -80,7 +80,7 @@ export class IncidentController {
     @Body() createIncidentDto: CreateIncidentDto,
     @UploadedFiles() images: Express.Multer.File[]
   ) {
-    const baseUrl = process.env.API_URL || "http://localhost:8080";
+    const baseUrl = process.env.API_URL || "https://sps-backend-1.onrender.com";
     const processedImages = images?.map((img) => ({
       ...img,
       filename: `${baseUrl}/incidents/images/${img.filename}`,
