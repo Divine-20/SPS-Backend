@@ -72,6 +72,8 @@ export class UserService {
         role: role || Role.REPORTER,
         citizenship: citizenship || CitizenshipStatus.RESIDENT,
         ticketNumber,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
   }
