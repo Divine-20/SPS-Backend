@@ -110,7 +110,7 @@ export class IncidentService {
             ? {
                 createMany: {
                   data: images.map((img) => ({
-                    url: img.filename,
+                    url: typeof img === "string" ? img : img.filename,
                   })),
                 },
               }
@@ -196,7 +196,7 @@ export class IncidentService {
           ? {
               createMany: {
                 data: images.map((img) => ({
-                  url: img.filename,
+                  url: typeof img === "string" ? img : img.filename,
                 })),
               },
             }
